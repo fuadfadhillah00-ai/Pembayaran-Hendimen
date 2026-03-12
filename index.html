@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Harga + QRIS Midtrans</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            margin: 0;
+            background: #f2f5fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .invoice-card {
+            max-width: 1200px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px -20px #1f3e5c;
+            overflow: hidden;
+        }
+        .brand-bar {
+            background: linear-gradient(100deg, #003153, #1b4f7a);
+            padding: 24px 36px;
+            color: white;
+        }
+        .brand-bar h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 2rem;
+        }
+        .brand-bar p {
+            margin: 8px 0 0;
+            opacity: 0.8;
+        }
+        .parameter-panel {
+            padding: 32px 36px;
+        }
+        .grid-indicator {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px 40px;
+            margin-bottom: 40px;
+        }
+        .indicator-item {
+            background: #f8fcff;
+            border-radius: 28px;
+            padding: 18px 24px;
+            border: 1px solid #dce8f2;
+        }
+        .indicator-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .indicator-label .icon {
+            font-size: 1.8rem;
+        }
+        .indicator-label .title {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #133855;
+        }
+        select {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 1.5px solid #c7d9ec;
+            background-color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .price-snapshot {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            background: #eaf1fb;
+            border-radius: 60px;
+            padding: 18px 32px;
+            margin: 20px 0;
+        }
+        .snapshot-item .big-number {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #003057;
+        }
+        .tip-section {
+            background: #fefaf0;
+            border-radius: 50px;
+            padding: 20px 32px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            border: 1px solid #f7e2c5;
+        }
+        .tip-label .title {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #7a5800;
+        }
+        .tip-select select {
+            background-color: #fff8e7;
+            border-color: #e6c999;
+            min-width: 200px;
+        }
+        .tip-nilai {
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #b87800;
+            background: #fff1d2;
+            padding: 8px 24px;
+            border-radius: 60px;
+        }
+        .final-total {
+            background: #0f3452;
+            color: white;
+            border-radius: 40px;
+            padding: 26px 36px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        .final-total-left .value {
+            font-size: 2.8rem;
+            font-weight: 800;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(255,255,255,0.4);
+            color: white;
+            font-weight: 600;
+            padding: 14px 30px;
+            border-radius: 60px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 10px;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            width: 500px;
+            max-width: 95%;
+            border-radius: 30px;
+            text-align: center;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            right: 25px;
+            top: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        .qr-container {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .qr-container img {
+            max-width: 250px;
+            max-height: 250px;
+            width: auto;
+            height: auto;
+        }
+        .qr-string {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .expiry-timer {
+            color: #d32f2f;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .proxy-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .proxy-section h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .proxy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .proxy-btn:hover {
+            background: #0056b3;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-active {
+            background: #28a745;
+            color: white;
+        }
+        .status-inactive {
+            background: #dc3545;
+            color: white;
+        }
+        .debug-info {
+            background: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+            text-align: left;
+            max-height: 200px;
+            overflow: auto;
+        }
+    </style>
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+</head>
+<body>
+<div class="invoice-card">
+    <div class="brand-bar">
+        <h2>⏱️ Harga Layanan + QRIS Midtrans</h2>
+        <p>Pilih kondisi pekerjaan, tambahkan tip, bayar dengan QRIS</p>
+    </div>
+
+    <div class="parameter-panel">
+        <!-- SECTION CORS PROXY - YANG DIPERBAIKI -->
+        <div class="proxy-section" id="proxySection">
+            <h3>🔒 CORS Proxy Required</h3>
+            <p>Untuk dapat menggunakan QRIS, Anda perlu mengaktifkan CORS Proxy terlebih dahulu.</p>
+            <p><strong>Status Proxy:</strong> 
+                <span id="proxyStatus" class="status-badge status-inactive">Belum Aktif</span>
+            </p>
+            <button class="proxy-btn" id="enableCorsProxyBtn">
+                🌐 Aktifkan CORS Proxy
+            </button>
+            <p style="font-size: 14px; margin-top: 15px;">
+                ⚡ Tombol ini akan membuka halaman CORS Anywhere. Klik "Request temporary access" di halaman tersebut, lalu kembali ke sini.
+            </p>
+        </div>
+
+        <!-- Info skor -->
+        <div style="display: flex; gap: 30px; background: #f1f7fe; border-radius: 50px; padding: 12px 28px; margin-bottom: 20px;">
+            <span>🔵 Skor 1: Rp0</span>
+            <span>🔵 Skor 2: +Rp20.800</span>
+            <span>🔵 Skor 3: +Rp41.600</span>
+            <span>💰 Dasar: Rp50.000</span>
+        </div>
+
+        <!-- Grid Indikator -->
+        <div class="grid-indicator" id="indicatorGrid"></div>
+
+        <!-- Snapshot Harga -->
+        <div class="price-snapshot">
+            <div class="snapshot-item">
+                <div class="small">💵 Dasar</div>
+                <div class="big-number">Rp50.000</div>
+            </div>
+            <div class="snapshot-item">
+                <div class="small">➕ Pertambahan</div>
+                <div class="big-number" id="totalExtra">Rp62.400</div>
+            </div>
+            <div class="snapshot-item">
+                <div class="small">📊 Skor</div>
+                <div class="big-number" id="skorRingkas">2·1·2·1·2·1</div>
+            </div>
+        </div>
+
+        <!-- Tip Section -->
+        <div class="tip-section">
+            <div class="tip-label">
+                <span>💝</span>
+                <span class="title">Tip</span>
+            </div>
+            <div class="tip-select">
+                <select id="tipDropdown">
+                    <option value="0">Tanpa tip</option>
+                    <option value="5000">Rp 5.000</option>
+                    <option value="10000">Rp 10.000</option>
+                    <option value="20000">Rp 20.000</option>
+                    <option value="50000">Rp 50.000</option>
+                    <option value="100000">Rp 100.000</option>
+                </select>
+            </div>
+            <div class="tip-nilai" id="tipAmountDisplay">Rp0</div>
+        </div>
+
+        <!-- Final Total dengan Tombol Bayar -->
+        <div class="final-total">
+            <div class="final-total-left">
+                <h3>Total Akhir</h3>
+                <div class="value" id="finalPrice">Rp112.400</div>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn-secondary" id="resetBtn">↻ Reset</button>
+                <button class="btn-primary" id="payButton">💳 Bayar QRIS</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal untuk QRIS -->
+<div id="qrisModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <h2>🔍 Scan QRIS</h2>
+        <p>Scan kode QR ini dengan GoPay/ShopeePay</p>
+        
+        <div id="qrLoading" class="loading" style="margin: 30px auto;"></div>
+        
+        <div id="qrContainer" class="qr-container" style="display: none;">
+            <img id="qrImage" src="" alt="QRIS Code">
+        </div>
+        
+        <div id="qrStringContainer" style="display: none;">
+            <p>Atau gunakan string QR ini:</p>
+            <div class="qr-string" id="qrString"></div>
+        </div>
+        
+        <div id="qrError" style="color: red; display: none; margin: 20px;"></div>
+        
+        <div style="margin-top: 20px;">
+            <p>Order ID: <span id="orderId">-</span></p>
+            <p class="expiry-timer" id="expiryTimer">Berlaku 15:00</p>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 10px; background: #f0f7ff; border-radius: 10px;">
+            <p><strong>Status Pembayaran:</strong> <span id="paymentStatus">Menunggu pembayaran...</span></p>
+        </div>
+        
+        <div class="debug-info" id="debugInfo" style="display: none;">
+            <strong>Debug Info:</strong>
+            <pre id="debugContent"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ========== KONFIGURASI MIDTRANS ==========
+        const MIDTRANS_CLIENT_KEY = 'SB-Mid-client-q85_9N72OqmNzNjf';
+        const MIDTRANS_SERVER_KEY = 'SB-Mid-server-ZoToT_rq4FsYKqgcOI8Vmasc';
+        const SERVER_KEY_BASE64 = btoa(MIDTRANS_SERVER_KEY + ':');
+        
+        // CORS Proxy URL
+        const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+        const MIDTRANS_API_URL = 'https://api.sandbox.midtrans.com/v2/charge';
+        const MIDTRANS_STATUS_URL = 'https://api.sandbox.midtrans.com/v2';
+        
+        // ========== DATA INDIKATOR ==========
+        const indicators = [
+            { name: 'Waktu', icon: '⏳', options: [
+                { text: '< 1 jam', skor: 1 },
+                { text: '1 - 3 jam', skor: 2 },
+                { text: '> 3 jam', skor: 3 }
+            ]},
+            { name: 'Beban', icon: '🏋️', options: [
+                { text: '< 5 kg', skor: 1 },
+                { text: '5 - 15 kg', skor: 2 },
+                { text: '> 15 kg', skor: 3 }
+            ]},
+            { name: 'Keahlian', icon: '📘', options: [
+                { text: 'Tidak perlu', skor: 1 },
+                { text: 'Minimal arahan', skor: 2 },
+                { text: 'Khusus/sertifikasi', skor: 3 }
+            ]},
+            { name: 'Risiko', icon: '⚠️', options: [
+                { text: 'Rendah', skor: 1 },
+                { text: 'Sedang', skor: 2 },
+                { text: 'Tinggi', skor: 3 }
+            ]},
+            { name: 'Peralatan', icon: '🔧', options: [
+                { text: 'Tidak perlu', skor: 1 },
+                { text: 'Sederhana', skor: 2 },
+                { text: 'Khusus/berat', skor: 3 }
+            ]},
+            { name: 'Mobilitas', icon: '🚚', options: [
+                { text: '1 titik', skor: 1 },
+                { text: '2-3 titik', skor: 2 },
+                { text: '>3 titik/berpindah', skor: 3 }
+            ]}
+        ];
+
+        // ========== STATE ==========
+        const nilaiPerTingkat = 20800;
+        const hargaDasar = 50000;
+        let currentSkor = [2, 1, 2, 1, 2, 1];
+        let dropdownElements = [];
+        let orderId = '';
+        let statusCheckInterval = null;
+        let proxyEnabled = false;
+
+        // ========== ELEMEN DOM ==========
+        const gridEl = document.getElementById('indicatorGrid');
+        const totalExtraEl = document.getElementById('totalExtra');
+        const skorRingkasEl = document.getElementById('skorRingkas');
+        const finalPriceEl = document.getElementById('finalPrice');
+        const tipDropdown = document.getElementById('tipDropdown');
+        const tipAmountDisplay = document.getElementById('tipAmountDisplay');
+        const resetBtn = document.getElementById('resetBtn');
+        const payButton = document.getElementById('payButton');
+        const enableCorsProxyBtn = document.getElementById('enableCorsProxyBtn');
+        const proxySection = document.getElementById('proxySection');
+        const proxyStatus = document.getElementById('proxyStatus');
+        
+        // Modal elements
+        const modal = document.getElementById('qrisModal');
+        const closeModal = document.getElementById('closeModal');
+        const qrLoading = document.getElementById('qrLoading');
+        const qrContainer = document.getElementById('qrContainer');
+        const qrImage = document.getElementById('qrImage');
+        const qrStringContainer = document.getElementById('qrStringContainer');
+        const qrString = document.getElementById('qrString');
+        const qrError = document.getElementById('qrError');
+        const orderIdSpan = document.getElementById('orderId');
+        const expiryTimerSpan = document.getElementById('expiryTimer');
+        const paymentStatusSpan = document.getElementById('paymentStatus');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+
+        // ========== FUNGSI UPDATE STATUS PROXY ==========
+        function updateProxyStatus() {
+            if (proxyEnabled) {
+                proxyStatus.textContent = 'Aktif';
+                proxyStatus.className = 'status-badge status-active';
+                proxySection.style.backgroundColor = '#d4edda';
+                proxySection.style.borderColor = '#28a745';
+            } else {
+                proxyStatus.textContent = 'Belum Aktif';
+                proxyStatus.className = 'status-badge status-inactive';
+                proxySection.style.backgroundColor = '#fff3cd';
+                proxySection.style.borderColor = '#ffc107';
+            }
+        }
+
+        // ========== FUNGSI HITUNG ==========
+        function hitungTotalTambahan() {
+            let total = 0;
+            for (let skor of currentSkor) {
+                if (skor === 1) total += 0;
+                else if (skor === 2) total += nilaiPerTingkat;
+                else if (skor === 3) total += nilaiPerTingkat * 2;
+            }
+            return total;
+        }
+
+        function getTipValue() {
+            return parseInt(tipDropdown.value, 10) || 0;
+        }
+
+        function updateSemua() {
+            const tambahan = hitungTotalTambahan();
+            totalExtraEl.textContent = `Rp${tambahan.toLocaleString('id-ID')}`;
+            skorRingkasEl.textContent = currentSkor.join('·');
+            
+            const tip = getTipValue();
+            tipAmountDisplay.textContent = `Rp${tip.toLocaleString('id-ID')}`;
+            
+            const akhir = hargaDasar + tambahan + tip;
+            finalPriceEl.textContent = `Rp${akhir.toLocaleString('id-ID')}`;
+            
+            dropdownElements.forEach((select, idx) => {
+                if (parseInt(select.value, 10) !== currentSkor[idx]) {
+                    select.value = currentSkor[idx];
+                }
+            });
+        }
+
+        // ========== RENDER DROPDOWN ==========
+        function renderDropdowns() {
+            gridEl.innerHTML = '';
+            dropdownElements = [];
+
+            indicators.forEach((ind, idx) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'indicator-item';
+
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'indicator-label';
+                labelDiv.innerHTML = `<span class="icon">${ind.icon}</span><span class="title">${ind.name}</span>`;
+                itemDiv.appendChild(labelDiv);
+
+                const select = document.createElement('select');
+                select.dataset.index = idx;
+
+                ind.options.forEach((opt) => {
+                    const optionEl = document.createElement('option');
+                    optionEl.value = opt.skor;
+                    optionEl.textContent = opt.text;
+                    if (opt.skor === currentSkor[idx]) {
+                        optionEl.selected = true;
+                    }
+                    select.appendChild(optionEl);
+                });
+
+                select.addEventListener('change', function(e) {
+                    currentSkor[parseInt(e.target.dataset.index)] = parseInt(e.target.value, 10);
+                    updateSemua();
+                });
+
+                itemDiv.appendChild(select);
+                gridEl.appendChild(itemDiv);
+                dropdownElements.push(select);
+            });
+        }
+
+        // ========== RESET ==========
+        function resetToExample() {
+            currentSkor = [2, 1, 2, 1, 2, 1];
+            tipDropdown.value = "0";
+            dropdownElements.forEach((select, idx) => {
+                select.value = currentSkor[idx];
+            });
+            updateSemua();
+        }
+
+        // ========== FUNGSI GENERATE QR CODE ==========
+        function generateQRFromString(qrData) {
+            return new Promise((resolve, reject) => {
+                try {
+                    QRCode.toDataURL(qrData, { 
+                        width: 250,
+                        margin: 2,
+                        errorCorrectionLevel: 'M'
+                    }, (err, url) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(url);
+                        }
+                    });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        // ========== FUNGSI QRIS MIDTRANS ==========
+        async function createQRISTransaction() {
+            if (!proxyEnabled) {
+                alert('Silakan aktifkan CORS Proxy terlebih dahulu dengan klik tombol "Aktifkan CORS Proxy"');
+                return;
+            }
+
+            const totalAmount = hargaDasar + hitungTotalTambahan() + getTipValue();
+            const newOrderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            
+            // Tampilkan modal dan loading
+            modal.style.display = "block";
+            qrLoading.style.display = "inline-block";
+            qrContainer.style.display = "none";
+            qrStringContainer.style.display = "none";
+            qrError.style.display = "none";
+            debugInfo.style.display = "none";
+            paymentStatusSpan.textContent = "Membuat transaksi...";
+            
+            try {
+                console.log('Membuat transaksi dengan amount:', totalAmount);
+                console.log('Order ID:', newOrderId);
+                
+                // Request ke Midtrans melalui CORS proxy
+                const response = await fetch(CORS_PROXY + MIDTRANS_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Authorization': `Basic ${SERVER_KEY_BASE64}`
+                    },
+                    body: JSON.stringify({
+                        payment_type: 'qris',
+                        transaction_details: {
+                            order_id: newOrderId,
+                            gross_amount: totalAmount
+                        },
+                        qris: {
+                            acquirer: 'gopay'
+                        },
+                        customer_details: {
+                            first_name: 'Customer',
+                            email: 'customer@email.com',
+                            phone: '08123456789'
+                        },
+                        item_details: [{
+                            id: 'SERVICE-1',
+                            price: totalAmount,
+                            quantity: 1,
+                            name: 'Pembayaran Jasa'
+                        }],
+                        expiry: {
+                            duration: 15,
+                            unit: 'minutes'
+                        }
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                
+                // Tampilkan response untuk debugging
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+                
+                // Parse JSON
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error('Response tidak valid: ' + responseText.substring(0, 200));
+                }
+                
+                console.log('Parsed response:', result);
+                
+                // Tampilkan debug info
+                debugContent.textContent = JSON.stringify(result, null, 2);
+                debugInfo.style.display = 'block';
+
+                if (result.status_code === '201' || result.status_code === '200') {
+                    orderId = result.order_id || newOrderId;
+                    orderIdSpan.textContent = orderId;
+                    
+                    // Cari QR code dari berbagai kemungkinan format response
+                    let qrContent = null;
+                    
+                    // Format 1: actions array dengan generate-qr-code
+                    if (result.actions) {
+                        const qrAction = result.actions.find(a => a.name === 'generate-qr-code' || a.method === 'GET');
+                        if (qrAction && qrAction.url) {
+                            qrContent = qrAction.url;
+                        }
+                    }
+                    
+                    // Format 2: qr_string langsung
+                    if (!qrContent && result.qr_string) {
+                        qrContent = result.qr_string;
+                    }
+                    
+                    // Format 3: qr_url
+                    if (!qrContent && result.qr_url) {
+                        qrContent = result.qr_url;
+                    }
+                    
+                    // Format 4: dari actions[0].url
+                    if (!qrContent && result.actions && result.actions[0] && result.actions[0].url) {
+                        qrContent = result.actions[0].url;
+                    }
+                    
+                    if (qrContent) {
+                        // Tampilkan string QR
+                        qrString.textContent = qrContent;
+                        qrStringContainer.style.display = 'block';
+                        
+                        try {
+                            // Generate QR code dari string
+                            const qrDataUrl = await generateQRFromString(qrContent);
+                            qrImage.src = qrDataUrl;
+                            
+                            qrLoading.style.display = "none";
+                            qrContainer.style.display = "block";
+                            
+                            // Mulai timer dan polling
+                            startExpiryTimer(15 * 60);
+                            startStatusPolling(orderId);
+                            paymentStatusSpan.textContent = "Menunggu pembayaran...";
+                            
+                        } catch (qrError) {
+                            console.error('QR Generation Error:', qrError);
+                            qrLoading.style.display = "none";
+                            qrError.style.display = "block";
+                            qrError.innerHTML = `Gagal generate QR code: ${qrError.message}<br>String QR: ${qrContent}`;
+                        }
+                    } else {
+                        throw new Error('Tidak menemukan QR code dalam response. Lihat debug info.');
+                    }
+                } else {
+                    throw new Error(result.status_message || `Gagal: ${JSON.stringify(result)}`);
+                }
+                
+            } catch (error) {
+                console.error('Error detail:', error);
+                qrLoading.style.display = "none";
+                qrError.style.display = "block";
+                qrError.innerHTML = `Error: ${error.message}<br><br>Pastikan CORS proxy sudah aktif.`;
+                paymentStatusSpan.textContent = "Gagal membuat transaksi";
+            }
+        }
+
+        // Timer untuk expiry
+        function startExpiryTimer(seconds) {
+            const timer = setInterval(() => {
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    expiryTimerSpan.textContent = "Kadaluarsa";
+                    paymentStatusSpan.textContent = "Transaksi kadaluarsa";
+                    return;
+                }
+                
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                expiryTimerSpan.textContent = `Berlaku ${mins}:${secs.toString().padStart(2, '0')}`;
+                seconds--;
+            }, 1000);
+            
+            window.expiryTimer = timer;
+        }
+
+        // Polling status pembayaran
+        function startStatusPolling(orderId) {
+            if (statusCheckInterval) clearInterval(statusCheckInterval);
+            
+            statusCheckInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(CORS_PROXY + `${MIDTRANS_STATUS_URL}/${orderId}/status`, {
+                        headers: {
+                            'Authorization': `Basic ${SERVER_KEY_BASE64}`,
+                            'Origin': window.location.origin,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    console.log('Status check:', result);
+                    
+                    if (result.transaction_status === 'settlement') {
+                        paymentStatusSpan.textContent = "✅ PEMBAYARAN BERHASIL!";
+                        paymentStatusSpan.style.color = "green";
+                        clearInterval(statusCheckInterval);
+                        if (window.expiryTimer) clearInterval(window.expiryTimer);
+                        
+                        setTimeout(() => {
+                            modal.style.display = "none";
+                            alert("Pembayaran berhasil! Terima kasih.");
+                        }, 3000);
+                        
+                    } else if (['expire', 'cancel', 'deny'].includes(result.transaction_status)) {
+                        paymentStatusSpan.textContent = "❌ Transaksi " + result.transaction_status;
+                        paymentStatusSpan.style.color = "red";
+                        clearInterval(statusCheckInterval);
+                        if (window.expiryTimer) clearInterval(window.expiryTimer);
+                        
+                    } else if (result.transaction_status === 'pending') {
+                        paymentStatusSpan.textContent = "Menunggu pembayaran...";
+                    }
+                    
+                } catch (error) {
+                    console.error('Status check error:', error);
+                }
+            }, 3000);
+        }
+
+        // ========== ENABLE CORS PROXY ==========
+        enableCorsProxyBtn.addEventListener('click', function() {
+            // Buka halaman CORS Anywhere
+            window.open('https://cors-anywhere.herokuapp.com/', '_blank');
+            
+            // Tampilkan instruksi
+            alert('LANGKAH-LANGKAH:\n\n1. Di tab baru, cari tombol "Request temporary access to the demo server"\n2. Klik tombol tersebut\n3. Setelah muncul pesan sukses, kembali ke halaman ini\n4. Klik "Bayar QRIS" untuk melanjutkan');
+            
+            // Set proxy enabled setelah 5 detik (asumsi user sudah grant)
+            setTimeout(() => {
+                proxyEnabled = true;
+                updateProxyStatus();
+                
+                // Sembunyikan section proxy setelah aktif (opsional)
+                // proxySection.style.display = 'none';
+            }, 5000);
+        });
+
+        // ========== EVENT LISTENERS ==========
+        tipDropdown.addEventListener('change', updateSemua);
+        resetBtn.addEventListener('click', resetToExample);
+        
+        payButton.addEventListener('click', function() {
+            const total = hargaDasar + hitungTotalTambahan() + getTipValue();
+            if (total < 10000) {
+                alert('Minimal transaksi Rp10.000');
+                return;
+            }
+            createQRISTransaction();
+        });
+        
+        closeModal.addEventListener('click', function() {
+            modal.style.display = "none";
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            if (window.expiryTimer) {
+                clearInterval(window.expiryTimer);
+            }
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                }
+                if (window.expiryTimer) {
+                    clearInterval(window.expiryTimer);
+                }
+            }
+        });
+
+        // ========== INISIALISASI ==========
+        renderDropdowns();
+        updateSemua();
+        updateProxyStatus();
+
+        // Cek localStorage untuk status proxy
+        try {
+            const savedProxy = localStorage.getItem('midtrans_proxy_enabled');
+            if (savedProxy === 'true') {
+                proxyEnabled = true;
+                updateProxyStatus();
+            }
+        } catch (e) {
+            console.log('LocalStorage tidak tersedia');
+        }
+
+    })();
+</script>
+</body>
+</html>
